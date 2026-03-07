@@ -1,0 +1,13 @@
+/* Similarity.lk – additional styles */
+/* Most styling is handled by Tailwind CDN + inline styles in templates */
+
+/* Smooth page transitions */
+body { transition: opacity 0.15s ease; }
+
+/* Custom file input styling */
+input[type="file"]::-webkit-file-upload-button {
+  display: none;
+}
+
+/* Ensure table doesn't overflow badly */
+table { border-collapse: collapse; }

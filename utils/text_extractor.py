@@ -1,0 +1,239 @@
+"""
+Text Extractor — with OCR fallback for legacy-encoded Sinhala PDFs
+===================================================================
+
+Two types of problematic PDFs handled automatically:
+
+  Type A — CID-encoded fonts (no ToUnicode map):
+    pdfplumber returns "(cid:200)(cid:106)..." placeholders.
+    Detected by: > 25% of extracted text being CID tokens.
+
+  Type B — Wijesekara / legacy glyph-remapped fonts:
+    Font remaps Latin codepoints to Sinhala glyphs visually (FM-Malithi,
+    Helani, Iskoola-legacy, Nitro PDF output, etc.).
+    pdfplumber extracts garbled Latin bytes — zero Sinhala Unicode.
+    Detected by: < 2% Sinhala Unicode (U+0D80–U+0DFF) in extracted text.
+
+OCR fallback pipeline (no system dependencies required):
+    PyMuPDF (fitz) renders pages to images at 300 DPI — self-contained,
+    works on Windows/Linux/macOS without Poppler.
+    Tesseract OCR with sin+eng language pack produces Unicode Sinhala.
+
+Extraction priority:
+  PDF  → 1. pdfplumber  [quality check]
+          2. pypdf       [quality check]
+          3. PyMuPDF + Tesseract OCR  ← poppler-free, cross-platform
+  DOCX → python-docx
+"""
+
+import re
+import os
+import io
+
+# Sinhala Unicode block: U+0D80 – U+0DFF
+_SINHALA_RE = re.compile(r'[\u0D80-\u0DFF]')
+CID_PATTERN  = re.compile(r'\(cid:\d+\)')
+
+_MIN_TEXT_LEN = 80
+
+
+def _cid_ratio(text: str) -> float:
+    if not text:
+        return 0.0
+    cid_chars = sum(len(m.group()) for m in CID_PATTERN.finditer(text))
+    return cid_chars / max(len(text), 1)
+
+
+def _sinhala_ratio(text: str) -> float:
+    """Fraction of non-space printable chars that are Sinhala Unicode."""
+    if not text:
+        return 0.0
+    sinhala   = len(_SINHALA_RE.findall(text))
+    printable = sum(1 for c in text if not c.isspace())
+    return sinhala / max(printable, 1)
+
+
+def _is_good_extraction(text: str) -> bool:
+    """
+    Return True only if extraction looks like genuine Unicode content.
+    Rejects:
+      - Text too short (< 80 chars)
+      - > 25% CID placeholder tokens     → Type A legacy font
+      - < 2% Sinhala Unicode characters  → Type B Wijesekara font
+    """
+    if not text or len(text.strip()) < _MIN_TEXT_LEN:
+        return False
+    if _cid_ratio(text) > 0.25:
+        return False
+    if _sinhala_ratio(text) < 0.02:
+        return False
+    return True
+
+
+def _strip_cid(text: str) -> str:
+    return CID_PATTERN.sub('', text).strip()
+
+
+# ---------------------------------------------------------------------------
+# OCR extractor — uses PyMuPDF (no Poppler needed, cross-platform)
+# ---------------------------------------------------------------------------
+def _extract_via_ocr(file_path: str) -> str:
+    """
+    Render each PDF page to a 300-DPI RGB image using PyMuPDF (fitz),
+    then run Tesseract OCR with Sinhala + English language support.
+
+    PyMuPDF bundles its own MuPDF renderer — no Poppler or GTK required.
+    Works on Windows, Linux, and macOS out of the box.
+    """
+    import fitz          # PyMuPDF — pip install pymupdf
+    import pytesseract
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    from PIL import Image
+
+    # Determine available OCR languages
+    try:
+        langs = pytesseract.get_languages()
+        ocr_lang = 'sin+eng' if 'sin' in langs else 'eng'
+    except Exception:
+        ocr_lang = 'sin+eng'
+
+    DPI    = 300
+    SCALE  = DPI / 72.0   # MuPDF native unit is 72 dpi
+    matrix = fitz.Matrix(SCALE, SCALE)
+
+    parts = []
+    try:
+        doc = fitz.open(file_path)
+    except Exception as e:
+        raise RuntimeError(f'PyMuPDF could not open file: {e}')
+
+    try:
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            pix  = page.get_pixmap(matrix=matrix, colorspace=fitz.csRGB)
+            img  = Image.open(io.BytesIO(pix.tobytes('png')))
+            page_text = pytesseract.image_to_string(
+                img,
+                lang=ocr_lang,
+                config='--psm 3 --oem 1',
+            )
+            parts.append(page_text)
+    finally:
+        doc.close()
+
+    return '\n\n'.join(parts)
+
+
+# ---------------------------------------------------------------------------
+# PDF extractor
+# ---------------------------------------------------------------------------
+def _extract_pdf(file_path: str) -> str:
+    # --- Attempt 1: pdfplumber ---
+    try:
+        import pdfplumber
+        pages_text = []
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                pages_text.append(page.extract_text() or '')
+        raw = '\n\n'.join(pages_text)
+        if _is_good_extraction(raw):
+            return _strip_cid(raw)
+    except Exception:
+        pass
+
+    # --- Attempt 2: pypdf ---
+    try:
+        from pypdf import PdfReader
+        pages_text = [p.extract_text() or '' for p in PdfReader(file_path).pages]
+        raw = '\n\n'.join(pages_text)
+        if _is_good_extraction(raw):
+            return _strip_cid(raw)
+    except Exception:
+        pass
+
+    # --- Attempt 3: PyMuPDF + Tesseract OCR ---
+    # Handles CID-encoded and Wijesekara/legacy fonts without Poppler
+    try:
+        return _extract_via_ocr(file_path)
+    except Exception as e:
+        raise RuntimeError(
+            f'All extraction methods failed for "{os.path.basename(file_path)}". '
+            f'OCR error: {e}\n\n'
+            f'To enable OCR support, install:\n'
+            f'  pip install pymupdf pytesseract\n'
+            f'  # Windows: https://github.com/UB-Mannheim/tesseract/wiki\n'
+            f'  # Linux:   sudo apt install tesseract-ocr tesseract-ocr-sin\n'
+            f'  # macOS:   brew install tesseract'
+        )
+
+
+# ---------------------------------------------------------------------------
+# DOCX extractor
+# ---------------------------------------------------------------------------
+def _extract_docx(file_path: str) -> str:
+    from docx import Document
+    doc = Document(file_path)
+    return '\n'.join(p.text for p in doc.paragraphs if p.text.strip())
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+def extract_text(file_path: str) -> str:
+    """
+    Extract plain text from a PDF or DOCX file.
+
+    Automatically falls back to Tesseract OCR (via PyMuPDF page rendering)
+    for PDFs that use legacy Sinhala font encodings (CID or Wijesekara).
+    No Poppler installation required — PyMuPDF is self-contained.
+    """
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext == '.pdf':
+        return _extract_pdf(file_path)
+    elif ext in ('.docx', '.doc'):
+        return _extract_docx(file_path)
+    else:
+        raise ValueError(f'Unsupported file type: {ext}')
+
+
+# ---------------------------------------------------------------------------
+# Sentence splitter
+# ---------------------------------------------------------------------------
+_WHITESPACE = re.compile(r'\s+')
+_MIN_LEN    = 15
+_MAX_SENTS  = 40
+
+
+def split_sentences(text: str) -> list:
+    """
+    Split text into sentences suitable for plagiarism analysis.
+    Splits on sentence-ending punctuation and blank lines.
+    Keeps sentences >= 15 chars, caps at 40 sentences.
+    """
+    text = _WHITESPACE.sub(' ', text).strip()
+    raw  = re.split(r'(?<=[.!?।෴])\s+|\n{2,}', text)
+
+    sentences = []
+    for seg in raw:
+        seg = seg.strip()
+        if not seg:
+            continue
+        if len(seg) > 300:
+            sub = re.split(r'[,\n]+', seg)
+            sentences.extend(s.strip() for s in sub if len(s.strip()) >= _MIN_LEN)
+        elif len(seg) >= _MIN_LEN:
+            sentences.append(seg)
+
+    # Deduplicate while preserving order
+    seen, unique = set(), []
+    for s in sentences:
+        key = s[:80]
+        if key not in seen:
+            seen.add(key)
+            unique.append(s)
+
+    # If over cap, keep the longest (most content-rich) sentences
+    if len(unique) > _MAX_SENTS:
+        unique = sorted(unique, key=len, reverse=True)[:_MAX_SENTS]
+
+    return unique

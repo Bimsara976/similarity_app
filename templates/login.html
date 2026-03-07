@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — Similarity.lk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .glass {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .input-field {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.2s;
+    }
+    .input-field:focus {
+      background: rgba(99,102,241,0.1);
+      border-color: #6366f1;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+    .btn-login {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      transition: all 0.2s;
+    }
+    .btn-login:hover {
+      background: linear-gradient(135deg, #4338ca, #6d28d9);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(99,102,241,0.4);
+    }
+    .btn-login:active { transform: translateY(0); }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(99,102,241,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    .float { animation: float 6s ease-in-out infinite; }
+    @keyframes pulse-glow {
+      0%,100% { box-shadow: 0 0 20px rgba(99,102,241,0.3); }
+      50%      { box-shadow: 0 0 40px rgba(99,102,241,0.6); }
+    }
+    .pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+  </style>
+</head>
+<body class="min-h-screen flex bg-slate-950 overflow-hidden">
+
+  <!-- Left panel: branding -->
+  <div class="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 grid-bg relative overflow-hidden">
+
+    <!-- Blurred blobs -->
+    <div class="absolute top-20 left-10 w-72 h-72 bg-indigo-600 rounded-full opacity-10 blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-violet-600 rounded-full opacity-10 blur-3xl pointer-events-none"></div>
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3 z-10">
+      <div class="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center pulse-glow">
+        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <span class="text-white font-bold text-xl tracking-tight">Similarity<span class="text-indigo-400">.lk</span></span>
+    </div>
+
+    <!-- Hero content -->
+    <div class="z-10">
+      <div class="float">
+        <div class="glass rounded-2xl p-6 mb-8 max-w-md">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-white font-semibold text-sm">Analysis complete</p>
+              <p class="text-slate-400 text-xs mt-1">report_thesis_final.docx — <span class="text-amber-400 font-medium">34.5% plagiarism detected</span></p>
+            </div>
+          </div>
+          <!-- Mini progress -->
+          <div class="mt-4 bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full" style="width:34.5%"></div>
+          </div>
+        </div>
+      </div>
+
+      <h1 class="text-4xl font-extrabold text-white leading-tight mb-4">
+        Detect Sinhala<br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">
+          Plagiarism in Seconds
+        </span>
+      </h1>
+      <p class="text-slate-400 text-base leading-relaxed max-w-sm">
+        Upload PDF or Word documents and get an instant, AI-powered plagiarism report with colour-coded source attribution.
+      </p>
+
+      <div class="mt-8 flex flex-col gap-3">
+        <div class="flex items-center gap-3 text-slate-300 text-sm">
+          <div class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
+            <svg class="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          Random Forest model · F1-Score 0.9859
+        </div>
+        <div class="flex items-center gap-3 text-slate-300 text-sm">
+          <div class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
+            <svg class="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          Colour-coded source attribution in PDF report
+        </div>
+        <div class="flex items-center gap-3 text-slate-300 text-sm">
+          <div class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
+            <svg class="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          Supports Sinhala PDF &amp; DOCX documents
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer credit -->
+    <p class="text-slate-600 text-xs z-10">
+      Similarity.lk — Sinhala Similarity &amp; Semantic Plagiarism Detection
+    </p>
+  </div>
+
+  <!-- Right panel: login form -->
+  <div class="flex-1 flex items-center justify-center p-8 relative">
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 opacity-80"></div>
+
+    <div class="w-full max-w-md z-10">
+      <!-- Mobile logo -->
+      <div class="flex items-center gap-3 mb-10 lg:hidden">
+        <div class="w-9 h-9 rounded-xl bg-indigo-500 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <span class="text-white font-bold text-xl">Similarity<span class="text-indigo-400">.lk</span></span>
+      </div>
+
+      <h2 class="text-2xl font-bold text-white mb-1">Welcome back</h2>
+      <p class="text-slate-400 text-sm mb-8">Sign in to access your plagiarism detection dashboard.</p>
+
+      {% if error %}
+      <div class="mb-6 flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+        <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-red-400 text-sm">{{ error }}</p>
+      </div>
+      {% endif %}
+
+      <form method="POST" action="/" class="space-y-5">
+        <div>
+          <label class="block text-slate-300 text-sm font-medium mb-2">Username</label>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <input name="username" type="text" required autocomplete="username"
+                   placeholder="Enter your username"
+                   class="input-field w-full pl-10 pr-4 py-3 rounded-xl text-white placeholder-slate-600 text-sm"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 text-sm font-medium mb-2">Password</label>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            <input name="password" id="pwd" type="password" required autocomplete="current-password"
+                   placeholder="Enter your password"
+                   class="input-field w-full pl-10 pr-12 py-3 rounded-xl text-white placeholder-slate-600 text-sm"/>
+            <button type="button" onclick="togglePwd()"
+                    class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+              <svg id="eye-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit"
+                class="btn-login w-full py-3 rounded-xl text-white font-semibold text-sm tracking-wide">
+          Sign In →
+        </button>
+      </form>
+
+      <div class="mt-8 glass rounded-xl p-4">
+        <p class="text-slate-500 text-xs font-medium mb-2 uppercase tracking-widest">Demo Credentials</p>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-slate-800/60 rounded-lg px-3 py-2">
+            <p class="text-slate-500 text-xs">Username</p>
+            <p class="text-indigo-400 text-sm font-mono">admin</p>
+          </div>
+          <div class="bg-slate-800/60 rounded-lg px-3 py-2">
+            <p class="text-slate-500 text-xs">Password</p>
+            <p class="text-indigo-400 text-sm font-mono">admin123</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-slate-700 text-xs text-center mt-8">
+        © 2026 Similarity.lk · Sinhala Plagiarism Detection System
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function togglePwd() {
+      const p = document.getElementById('pwd');
+      p.type = p.type === 'password' ? 'text' : 'password';
+    }
+  </script>
+</body>
+</html>

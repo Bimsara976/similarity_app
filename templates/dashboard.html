@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Similarity.lk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    .drop-zone {
+      border: 2px dashed #334155;
+      transition: all 0.25s ease;
+    }
+    .drop-zone.drag-over {
+      border-color: #6366f1;
+      background: rgba(99,102,241,0.07);
+    }
+    .sidebar-link {
+      transition: all 0.18s;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+      background: rgba(99,102,241,0.12);
+      color: #a5b4fc;
+    }
+    .badge-low    { background:#16a34a22; color:#4ade80; border:1px solid #16a34a44; }
+    .badge-mid    { background:#d9770622; color:#fbbf24; border:1px solid #d9770644; }
+    .badge-high   { background:#dc262622; color:#f87171; border:1px solid #dc262644; }
+    .badge-proc   { background:#0ea5e922; color:#38bdf8; border:1px solid #0ea5e944; }
+    .badge-fail   { background:#64748b22; color:#94a3b8; border:1px solid #64748b44; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+
+    @keyframes slide-up {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .slide-up { animation: slide-up 0.35s ease forwards; }
+
+    .progress-bar {
+      height: 4px;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      border-radius: 9999px;
+      transition: width 0.4s ease;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9));
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    #toast {
+      transition: all 0.3s ease;
+      transform: translateX(120%);
+    }
+    #toast.show {
+      transform: translateX(0);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+  <aside class="w-60 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0">
+    <!-- Logo -->
+    <div class="px-5 py-5 border-b border-slate-800">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-500 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-white font-bold text-sm leading-none">Similarity<span class="text-indigo-400">.lk</span></p>
+          <p class="text-slate-500 text-xs mt-0.5">Plagiarism Detection</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      <p class="text-slate-600 text-xs font-semibold px-3 mb-3 uppercase tracking-widest">Menu</p>
+      <a href="/dashboard" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-indigo-300 font-medium">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <p class="text-slate-600 text-xs font-semibold px-3 mt-5 mb-3 uppercase tracking-widest">Info</p>
+      <div class="px-3 py-2 rounded-lg">
+        <p class="text-slate-500 text-xs font-medium">Model</p>
+        <p class="text-slate-300 text-xs mt-0.5">Random Forest</p>
+      </div>
+      <div class="px-3 py-2 rounded-lg">
+        <p class="text-slate-500 text-xs font-medium">F1-Score</p>
+        <p class="text-green-400 text-xs mt-0.5 font-semibold">0.9859</p>
+      </div>
+      <div class="px-3 py-2 rounded-lg">
+        <p class="text-slate-500 text-xs font-medium">Recall</p>
+        <p class="text-green-400 text-xs mt-0.5 font-semibold">1.0000 (Perfect)</p>
+      </div>
+    </nav>
+
+    <!-- User -->
+    <div class="px-3 py-4 border-t border-slate-800">
+      <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800/50">
+        <div class="w-8 h-8 rounded-full bg-indigo-500/30 flex items-center justify-center flex-shrink-0">
+          <span class="text-indigo-300 text-xs font-bold uppercase">{{ user[0] }}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-white text-xs font-semibold truncate">{{ user }}</p>
+          <p class="text-slate-500 text-xs">Researcher</p>
+        </div>
+        <a href="/logout" title="Sign out"
+           class="text-slate-600 hover:text-red-400 transition-colors ml-1">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main content ───────────────────────────────────────────────── -->
+  <main class="flex-1 flex flex-col min-h-screen overflow-auto">
+
+    <!-- Top bar -->
+    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
+      <div>
+        <h1 class="text-lg font-bold text-white">Detection Dashboard</h1>
+        <p class="text-slate-500 text-xs mt-0.5">Sinhala Similarity Plagiarism Detection</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 bg-green-500/10 border border-green-500/30 text-green-400 px-3 py-1.5 rounded-full text-xs font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+          System Online
+        </span>
+      </div>
+    </header>
+
+    <div class="flex-1 px-8 py-6 space-y-6">
+
+      <!-- ── Stats cards ─────────────────────────────────────────────── -->
+      <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="stat-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Total Documents</p>
+            <div class="w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-white">{{ stats.total_files }}</p>
+          <p class="text-slate-500 text-xs mt-1">{{ stats.completed }} completed</p>
+        </div>
+
+        <div class="stat-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Avg. Plagiarism</p>
+            <div class="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-white">{{ stats.avg_plagiarism }}<span class="text-lg text-slate-400">%</span></p>
+          <p class="text-slate-500 text-xs mt-1">across all documents</p>
+        </div>
+
+        <div class="stat-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">High Risk</p>
+            <div class="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center">
+              <svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-white">{{ stats.high_risk }}</p>
+          <p class="text-slate-500 text-xs mt-1">≥50% plagiarism</p>
+        </div>
+
+        <div class="stat-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Model Accuracy</p>
+            <div class="w-8 h-8 rounded-lg bg-green-500/15 flex items-center justify-center">
+              <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-white">99.4<span class="text-lg text-slate-400">%</span></p>
+          <p class="text-slate-500 text-xs mt-1">Random Forest classifier</p>
+        </div>
+      </div>
+
+      <!-- ── Upload zone ─────────────────────────────────────────────── -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-bold text-white">Upload Document</h2>
+            <p class="text-slate-500 text-xs mt-0.5">PDF or DOCX · max 20 MB · Sinhala text</p>
+          </div>
+          <span class="text-slate-600 text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+            Accepts .pdf · .docx · .doc
+          </span>
+        </div>
+
+        <div id="drop-zone"
+             class="drop-zone rounded-xl p-10 text-center cursor-pointer relative"
+             onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" class="hidden" accept=".pdf,.docx,.doc"/>
+
+          <div id="dz-idle">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto mb-4">
+              <svg class="w-7 h-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+            </div>
+            <p class="text-white font-semibold text-sm">Drag &amp; drop your document here</p>
+            <p class="text-slate-500 text-xs mt-1">or click to browse files</p>
+          </div>
+
+          <div id="dz-selected" class="hidden">
+            <div class="flex items-center justify-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div class="text-left">
+                <p id="selected-name" class="text-white font-semibold text-sm"></p>
+                <p id="selected-size" class="text-slate-400 text-xs"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload progress -->
+        <div id="upload-progress" class="hidden mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-400 text-xs" id="progress-label">Uploading...</span>
+            <span class="text-slate-400 text-xs" id="progress-pct">0%</span>
+          </div>
+          <div class="bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div id="progress-bar" class="progress-bar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 mt-4">
+          <button id="upload-btn"
+                  onclick="uploadFile()"
+                  class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled>
+            <span id="btn-text">Analyse Document</span>
+            <span id="btn-spinner" class="hidden">
+              <svg class="spin w-4 h-4 inline mr-1" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="30 70"/>
+              </svg>
+              Analysing…
+            </span>
+          </button>
+          <button onclick="clearFile()"
+                  class="px-4 py-2.5 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:border-slate-600 text-sm transition-all">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Documents table ─────────────────────────────────────────── -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+          <h2 class="text-base font-bold text-white">Processed Documents</h2>
+          <span class="text-slate-500 text-xs">{{ files|length }} total</span>
+        </div>
+
+        {% if files %}
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-slate-800">
+                <th class="text-left px-6 py-3 text-slate-500 text-xs font-semibold uppercase tracking-wider">Document</th>
+                <th class="text-left px-4 py-3 text-slate-500 text-xs font-semibold uppercase tracking-wider">Uploaded</th>
+                <th class="text-center px-4 py-3 text-slate-500 text-xs font-semibold uppercase tracking-wider">Status</th>
+                <th class="text-center px-4 py-3 text-slate-500 text-xs font-semibold uppercase tracking-wider">Plagiarism</th>
+                <th class="text-center px-4 py-3 text-slate-500 text-xs font-semibold uppercase tracking-wider">Sentences</th>
+                <th class="text-center px-4 py-3 text-slate-500 text-xs font-semibold uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="files-tbody">
+              {% for f in files %}
+              <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors" id="row-{{ f.id }}">
+                <!-- Document name -->
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                      {% if f.saved_name.endswith('.pdf') %}bg-red-500/15{% else %}bg-blue-500/15{% endif %}">
+                      {% if f.saved_name.endswith('.pdf') %}
+                      <svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                      </svg>
+                      {% else %}
+                      <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <p class="text-white text-sm font-medium truncate max-w-48">{{ f.original_name }}</p>
+                      <p class="text-slate-600 text-xs mt-0.5 truncate max-w-48 font-mono">{{ f.saved_name }}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Upload time -->
+                <td class="px-4 py-4">
+                  <p class="text-slate-300 text-xs">
+                    {{ f.upload_time[:10] if f.upload_time else '—' }}
+                  </p>
+                  <p class="text-slate-600 text-xs mt-0.5">
+                    {{ f.upload_time[11:19] if f.upload_time and f.upload_time|length > 10 else '' }}
+                  </p>
+                </td>
+
+                <!-- Status -->
+                <td class="px-4 py-4 text-center">
+                  {% if f.status == 'completed' %}
+                    <span class="badge-low text-xs px-2.5 py-1 rounded-full font-medium">Completed</span>
+                  {% elif f.status == 'processing' %}
+                    <span class="badge-proc text-xs px-2.5 py-1 rounded-full font-medium">Processing</span>
+                  {% else %}
+                    <span class="badge-fail text-xs px-2.5 py-1 rounded-full font-medium">Failed</span>
+                  {% endif %}
+                </td>
+
+                <!-- Plagiarism % -->
+                <td class="px-4 py-4 text-center">
+                  {% if f.status == 'completed' %}
+                  <div class="flex flex-col items-center gap-1">
+                    <span class="text-sm font-bold
+                      {% if f.plagiarism_percentage < 25 %}text-green-400
+                      {% elif f.plagiarism_percentage < 50 %}text-amber-400
+                      {% else %}text-red-400{% endif %}">
+                      {{ f.plagiarism_percentage }}%
+                    </span>
+                    <div class="w-16 bg-slate-800 rounded-full h-1 overflow-hidden">
+                      <div class="h-full rounded-full
+                        {% if f.plagiarism_percentage < 25 %}bg-green-500
+                        {% elif f.plagiarism_percentage < 50 %}bg-amber-500
+                        {% else %}bg-red-500{% endif %}"
+                        style="width: {{ f.plagiarism_percentage }}%">
+                      </div>
+                    </div>
+                  </div>
+                  {% else %}
+                  <span class="text-slate-600 text-xs">—</span>
+                  {% endif %}
+                </td>
+
+                <!-- Sentences -->
+                <td class="px-4 py-4 text-center">
+                  {% if f.status == 'completed' %}
+                  <div class="text-xs text-slate-400 leading-relaxed">
+                    <span class="text-white font-semibold">{{ f.total_sentences }}</span> total<br/>
+                    <span class="text-red-400 font-medium">{{ f.plagiarized_sentences }}</span> flagged
+                  </div>
+                  {% else %}
+                  <span class="text-slate-600 text-xs">—</span>
+                  {% endif %}
+                </td>
+
+                <!-- Actions -->
+                <td class="px-4 py-4">
+                  <div class="flex items-center justify-center gap-2">
+                    {% if f.report_name %}
+                    <a href="/download/report/{{ f.report_name }}"
+                       title="Download Report"
+                       class="flex items-center gap-1.5 bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-400 text-xs px-3 py-1.5 rounded-lg transition-all border border-indigo-500/20 font-medium">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                      </svg>
+                      Report
+                    </a>
+                    {% endif %}
+                    <a href="/download/upload/{{ f.saved_name }}"
+                       title="Download Original"
+                       class="flex items-center gap-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-400 text-xs px-3 py-1.5 rounded-lg transition-all border border-slate-600/50 font-medium">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      Doc
+                    </a>
+                    <button onclick="deleteFile('{{ f.id }}')"
+                            title="Delete"
+                            class="w-7 h-7 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-all border border-red-500/20">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% else %}
+        <div class="py-16 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <p class="text-slate-400 font-medium text-sm">No documents yet</p>
+          <p class="text-slate-600 text-xs mt-1">Upload a PDF or DOCX file to get started</p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div><!-- /px-8 py-6 -->
+  </main><!-- /main -->
+
+  <!-- ── Toast notification ─────────────────────────────────────────── -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 max-w-xs">
+    <div id="toast-inner" class="rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3 text-sm font-medium">
+      <span id="toast-icon"></span>
+      <span id="toast-msg"></span>
+    </div>
+  </div>
+
+  <!-- ── JavaScript ─────────────────────────────────────────────────── -->
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
