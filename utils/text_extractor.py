@@ -87,7 +87,6 @@ def _extract_via_ocr(file_path: str) -> str:
     """
     import fitz          # PyMuPDF — pip install pymupdf
     import pytesseract
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
     from PIL import Image
 
     # Determine available OCR languages

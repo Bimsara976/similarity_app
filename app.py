@@ -1,3 +1,7 @@
+"""
+Similarity.lk — Sinhala Plagiarism Detection Web App
+Flask entry point: login, dashboard, upload, process, download.
+"""
 import os
 import json
 import uuid
@@ -166,7 +170,7 @@ def upload_file():
 
     # ── Process synchronously ─────────────────────────────────────────────
     try:
-        result = _process_file(file_path, base, timestamp)
+        result = _process_file(file_path, base, timestamp, original_name=original)
 
         db = load_db()
         for rec in db['files']:
@@ -190,10 +194,12 @@ def upload_file():
         return jsonify({'error': str(exc)}), 500
 
 
-def _process_file(file_path: str, base_name: str, timestamp: str) -> dict:
-    from utils.text_extractor  import extract_text, split_sentences
+def _process_file(file_path: str, base_name: str, timestamp: str,
+                  original_name: str = '') -> dict:
+    from utils.text_extractor    import extract_text, split_sentences
     from utils.plagiarism_engine import load_models, detect_plagiarism
     from utils.report_generator  import generate_report
+    from utils.semantic_loader   import load_semantic_data, summarise_semantic
 
     text      = extract_text(file_path)
     sentences = split_sentences(text)
@@ -204,9 +210,13 @@ def _process_file(file_path: str, base_name: str, timestamp: str) -> dict:
     model, vectorizer = load_models(MODELS_FOLDER)
     results           = detect_plagiarism(sentences, model, vectorizer)
 
-    total_s     = len(results)
-    plag_s      = sum(1 for r in results if r['is_plagiarized'])
-    plag_pct    = round((plag_s / total_s * 100) if total_s else 0, 2)
+    total_s  = len(results)
+    plag_s   = sum(1 for r in results if r['is_plagiarized'])
+    plag_pct = round((plag_s / total_s * 100) if total_s else 0, 2)
+
+    # ── Semantic plagiarism lookup (optional, separate section) ───────────
+    raw_semantic  = load_semantic_data(original_name or base_name, DATA_FOLDER)
+    semantic_data = summarise_semantic(raw_semantic) if raw_semantic else None
 
     report_name = f'Similarity_{base_name}_{timestamp}.pdf'
     report_path = os.path.join(REPORTS_FOLDER, report_name)
@@ -217,6 +227,7 @@ def _process_file(file_path: str, base_name: str, timestamp: str) -> dict:
         timestamp=timestamp,
         results=results,
         plagiarism_percentage=plag_pct,
+        semantic_data=semantic_data,
     )
 
     return {
@@ -224,6 +235,7 @@ def _process_file(file_path: str, base_name: str, timestamp: str) -> dict:
         'total_sentences':        total_s,
         'plagiarized_sentences':  plag_s,
         'report_name':            report_name,
+        'has_semantic':           semantic_data is not None,
     }
 
 
