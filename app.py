@@ -182,6 +182,16 @@ def upload_file():
 
         return jsonify({'success': True, 'file_id': file_id, **result})
 
+    except LanguageError as lang_exc:
+        # Remove the DB entry — document was rejected, file already deleted
+        db = load_db()
+        db['files'] = [f for f in db['files'] if f['id'] != file_id]
+        save_db(db)
+        return jsonify({
+            'error':          str(lang_exc),
+            'language_error': True,
+        }), 422
+
     except Exception as exc:
         db = load_db()
         for rec in db['files']:
@@ -194,14 +204,30 @@ def upload_file():
         return jsonify({'error': str(exc)}), 500
 
 
+class LanguageError(ValueError):
+    """Raised when the uploaded document does not contain Sinhala text."""
+    pass
+
+
 def _process_file(file_path: str, base_name: str, timestamp: str,
                   original_name: str = '') -> dict:
-    from utils.text_extractor    import extract_text, split_sentences
+    from utils.text_extractor    import extract_text, split_sentences, check_language
     from utils.plagiarism_engine import load_models, detect_plagiarism
     from utils.report_generator  import generate_report
     from utils.semantic_loader   import load_semantic_data, summarise_semantic
 
-    text      = extract_text(file_path)
+    text = extract_text(file_path)
+
+    # ── Language check — reject non-Sinhala documents immediately ─────────
+    lang = check_language(text)
+    if not lang['is_sinhala']:
+        # Delete the uploaded file — no need to store rejected docs
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
+        raise LanguageError(lang['warning'])
+
     sentences = split_sentences(text)
 
     if not sentences:

@@ -236,3 +236,69 @@ def split_sentences(text: str) -> list:
         unique = sorted(unique, key=len, reverse=True)[:_MAX_SENTS]
 
     return unique
+
+
+# ---------------------------------------------------------------------------
+# Language detection
+# ---------------------------------------------------------------------------
+_SINHALA_BLOCK = re.compile(r'[\u0D80-\u0DFF]')
+
+# Minimum fraction of printable chars that must be Sinhala Unicode
+_MIN_SINHALA_RATIO = 0.02   # 2% — even short Sinhala titles pass this
+
+
+def check_language(text: str) -> dict:
+    """
+    Analyse extracted text and decide whether it contains enough Sinhala
+    to be eligible for plagiarism detection.
+
+    Returns
+    -------
+    {
+        'is_sinhala'     : bool   — True if document is acceptable
+        'sinhala_ratio'  : float  — fraction of printable chars that are Sinhala
+        'sinhala_chars'  : int    — raw count of Sinhala Unicode characters
+        'total_chars'    : int    — total printable character count
+        'warning'        : str    — human-readable warning (empty if is_sinhala=True)
+    }
+    """
+    printable = [c for c in text if not c.isspace()]
+    total     = len(printable)
+
+    if total == 0:
+        return {
+            'is_sinhala':    False,
+            'sinhala_ratio': 0.0,
+            'sinhala_chars': 0,
+            'total_chars':   0,
+            'warning': (
+                'The document appears to be empty or contains no readable text. '
+                'Please upload a Sinhala-language document.'
+            ),
+        }
+
+    sinhala_count = len(_SINHALA_BLOCK.findall(text))
+    ratio         = sinhala_count / total
+
+    if ratio < _MIN_SINHALA_RATIO:
+        pct = round(ratio * 100, 2)
+        return {
+            'is_sinhala':    False,
+            'sinhala_ratio': ratio,
+            'sinhala_chars': sinhala_count,
+            'total_chars':   total,
+            'warning': (
+                f'This document does not appear to contain Sinhala text '
+                f'(only {pct}% Sinhala characters detected). '
+                f'Similarity.lk is designed for Sinhala-language documents only. '
+                f'Please upload a document written in Sinhala (සිංහල).'
+            ),
+        }
+
+    return {
+        'is_sinhala':    True,
+        'sinhala_ratio': ratio,
+        'sinhala_chars': sinhala_count,
+        'total_chars':   total,
+        'warning':       '',
+    }

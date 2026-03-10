@@ -18,6 +18,7 @@ function showToast(msg, type = 'success') {
     success: { bg: 'bg-green-900/90 border border-green-700/50 text-green-200', icon: '✓' },
     error:   { bg: 'bg-red-900/90 border border-red-700/50 text-red-200',       icon: '✕' },
     info:    { bg: 'bg-indigo-900/90 border border-indigo-700/50 text-indigo-200', icon: 'ℹ' },
+    warning: { bg: 'bg-amber-900/90 border border-amber-600/50 text-amber-200', icon: '⚠' },
   };
 
   const s = styles[type] || styles.info;
@@ -137,6 +138,10 @@ function uploadFile() {
           setTimeout(() => location.reload(), 800);
         }, 400);
       }, 600);
+    } else if (data.language_error) {
+      // Document is not in Sinhala — show amber warning, reset cleanly
+      finishUpload(false, null);
+      showLanguageWarning(data.error);
     } else {
       finishUpload(false, data.error || 'Processing failed.');
     }
@@ -162,9 +167,109 @@ function finishUpload(success, errorMsg) {
   document.getElementById('upload-btn').disabled = false;
 
   if (!success) {
-    setProgress(0, 'Upload failed');
-    showToast(errorMsg || 'Upload failed.', 'error');
+    setProgress(0, errorMsg ? 'Upload failed' : 'Ready');
+    if (errorMsg) showToast(errorMsg, 'error');
   }
+}
+
+
+// ── Language Warning Modal ────────────────────────────────────────────────
+function showLanguageWarning(message) {
+  // Remove existing modal if any
+  const existing = document.getElementById('lang-warning-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'lang-warning-modal';
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      background:#1e293b;border:1px solid #f59e0b;border-radius:16px;
+      max-width:480px;width:90%;padding:32px;box-shadow:0 25px 60px rgba(0,0,0,0.5);
+      animation:slideUp .25s ease;
+    ">
+      <!-- Icon -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="
+          display:inline-flex;align-items:center;justify-content:center;
+          width:64px;height:64px;border-radius:50%;
+          background:#451a03;border:2px solid #f59e0b;
+          font-size:30px;
+        ">⚠</div>
+      </div>
+
+      <!-- Title -->
+      <h3 style="
+        text-align:center;color:#fbbf24;font-size:18px;
+        font-weight:700;margin:0 0 12px;
+      ">Sinhala Document Required</h3>
+
+      <!-- Body -->
+      <p style="
+        color:#94a3b8;font-size:13px;line-height:1.7;
+        text-align:center;margin:0 0 8px;
+      ">
+        ${message}
+      </p>
+      <p style="
+        color:#64748b;font-size:12px;text-align:center;
+        margin:0 0 24px;
+      ">
+        Similarity.lk is a Sinhala plagiarism detection system.<br>
+        Only documents written in <strong style="color:#fbbf24;">සිංහල</strong> are supported.
+      </p>
+
+      <!-- Sinhala badge -->
+      <div style="
+        background:#0f172a;border:1px solid #334155;border-radius:8px;
+        padding:10px 16px;margin-bottom:24px;text-align:center;
+      ">
+        <span style="color:#64748b;font-size:11px;">Accepted languages:</span>
+        <span style="
+          display:inline-block;margin-left:8px;
+          background:#1d4ed8;color:white;padding:2px 12px;
+          border-radius:20px;font-size:12px;font-weight:600;
+        ">සිංහල (Sinhala)</span>
+      </div>
+
+      <!-- Button -->
+      <button onclick="document.getElementById('lang-warning-modal').remove();
+                       document.getElementById('file-input').value='';"
+        style="
+          display:block;width:100%;padding:12px;
+          background:#f59e0b;color:#0f172a;
+          border:none;border-radius:10px;
+          font-size:14px;font-weight:700;cursor:pointer;
+          transition:background .2s;
+        "
+        onmouseover="this.style.background='#fbbf24'"
+        onmouseout="this.style.background='#f59e0b'"
+      >
+        Upload a Sinhala Document
+      </button>
+    </div>
+    <style>
+      @keyframes slideUp {
+        from { opacity:0; transform:translateY(20px); }
+        to   { opacity:1; transform:translateY(0); }
+      }
+    </style>
+  `;
+
+  // Close on backdrop click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+      document.getElementById('file-input').value = '';
+    }
+  });
+
+  document.body.appendChild(modal);
 }
 
 
