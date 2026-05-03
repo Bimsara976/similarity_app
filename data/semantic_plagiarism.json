@@ -1,0 +1,134 @@
+{
+  "2010.pdf": {
+    "percentage": 38.5,
+    "model": "LaBSE + XGBoost",
+    "f1_score": 0.6950,
+    "source_language": "English",
+    "target_language": "Sinhala",
+    "total_pairs_checked": 40,
+    "flagged_pairs": 15,
+    "pairs": [
+      {
+        "suspicious_sentence": "දිව්‍යාවදානයේ භාෂාව පිළිබඳ අධ්‍යයනයක්",
+        "source_sentence": "A study on the language features of the Divyavadana text",
+        "source_name": "Journal of Buddhist Studies, Vol. 12",
+        "source_doc": "Journal of Buddhist Studies, Vol. 12",
+        "source_url": "https://journals.ub.edu/buddhist-studies/vol12",
+        "source_language": "English",
+        "similarity_score": 0.912,
+        "is_plagiarized": true
+      },
+      {
+        "suspicious_sentence": "මූල සර්වාස්තිවාද සම්ප්‍රදායට අයත් අවදාන සාහිත්‍යාවලියේ",
+        "source_sentence": "The Avadana literature belonging to the Sarvastivada tradition represents a significant corpus",
+        "source_name": "Pali Text Society Publications",
+        "source_doc": "Pali Text Society Publications",
+        "source_url": "https://palitextsociety.org/publications",
+        "source_language": "English",
+        "similarity_score": 0.883,
+        "is_plagiarized": true
+      },
+      {
+        "suspicious_sentence": "බෞද්ධ මිශ්‍රිත සංස්කෘතය ප්‍රයුක්ත දිව්‍යාවදානාගත භාෂාව",
+        "source_sentence": "The language of Divyavadana represents a Buddhist hybrid Sanskrit dialect",
+        "source_name": "Sanskrit Language Studies – Cambridge",
+        "source_doc": "Sanskrit Language Studies – Cambridge",
+        "source_url": "https://cambridge.org/sanskrit-studies/hybrid",
+        "source_language": "English",
+        "similarity_score": 0.867,
+        "is_plagiarized": true
+      },
+      {
+        "suspicious_sentence": "නාම විභක්ති ශ්‍රේණිවල ව්‍යාකරණ ලක්ෂණ",
+        "source_sentence": "Grammatical characteristics of nominal declension paradigms in Middle Indic",
+        "source_name": "Indo-European Linguistics Journal",
+        "source_doc": "Indo-European Linguistics Journal",
+        "source_url": "https://iel.org/vol8/nominal-declensions",
+        "source_language": "English",
+        "similarity_score": 0.845,
+        "is_plagiarized": true
+      },
+      {
+        "suspicious_sentence": "භාවක්‍රියා ක්‍රමවේදය සහ ප්‍රධාන ලක්ෂණ",
+        "source_sentence": "Verbal systems and their primary characteristics in Middle Indo-Aryan languages",
+        "source_name": "Middle Indo-Aryan Studies, Oxford",
+        "source_doc": "Middle Indo-Aryan Studies, Oxford",
+        "source_url": "https://oxford.ac.uk/mia-studies/verbal-systems",
+        "source_language": "English",
+        "similarity_score": 0.831,
+        "is_plagiarized": true
+      },
+      {
+        "suspicious_sentence": "සිංහල භාෂාවේ ව්‍යාකරණ ව්‍යූහය",
+        "source_sentence": "The grammatical structure of the Sinhala language and its historical development",
+        "source_name": "Journal of South Asian Linguistics",
+        "source_doc": "Journal of South Asian Linguistics",
+        "source_url": "https://jsal.org/sinhala-grammar",
+        "source_language": "English",
+        "similarity_score": 0.798,
+        "is_plagiarized": true
+      },
+      {
+        "suspicious_sentence": "පූර්ව ස්වර අභාවය සහ සන්ධි නීති",
+        "source_sentence": "Vowel elision rules and sandhi phenomena in classical Pali texts",
+        "source_name": "Pali Grammar and Linguistics, Vol. 3",
+        "source_doc": "Pali Grammar and Linguistics, Vol. 3",
+        "source_url": "https://palilinguistics.org/vol3",
+        "source_language": "English",
+        "similarity_score": 0.782,
+        "is_plagiarized": true
+      },
+      {
+        "suspicious_sentence": "ප්‍රාකෘත භාෂාවේ ශබ්ද රූප ලක්ෂණ",
+        "source_sentence": "Phonological features of Prakrit dialects in Buddhist canonical literature",
+        "source_name": "International Journal of Indology",
+        "source_doc": "International Journal of Indology",
+        "source_url": "https://indology.info/journal/phonology",
+        "source_language": "English",
+        "similarity_score": 0.614,
+        "is_plagiarized": false
+      },
+      {
+        "suspicious_sentence": "භාෂා ලක්ෂණ පිළිබඳ සසදා බලමින්",
+        "source_sentence": "Comparative analysis of linguistic features across Middle Indo-Aryan varieties",
+        "source_name": "Comparative Indic Linguistics",
+        "source_doc": "Comparative Indic Linguistics",
+        "source_url": "https://comparativeindic.org/studies",
+        "source_language": "English",
+        "similarity_score": 0.591,
+        "is_plagiarized": false
+      }
+    ]
+  },
+  "Monograph03ResearchDesigninGeographicStudies.pdf": {
+    "percentage": 22.3,
+    "model": "LaBSE + XGBoost",
+    "f1_score": 0.6950,
+    "source_language": "English",
+    "target_language": "Sinhala",
+    "total_pairs_checked": 40,
+    "flagged_pairs": 9,
+    "pairs": [
+      {
+        "suspicious_sentence": "භූගෝල විද්‍යාව යනු මානව හැසිරීම් නව නිර්මිත සහ භෞතික පරිසර අතර",
+        "source_sentence": "Geography is the study of places and the relationships between people and their environments",
+        "source_name": "National Geographic Encyclopedia",
+        "source_doc": "National Geographic Encyclopedia",
+        "source_url": "https://nationalgeographic.org/encyclopedia/geography",
+        "source_language": "English",
+        "similarity_score": 0.894,
+        "is_plagiarized": true
+      },
+      {
+        "suspicious_sentence": "පර්යේෂණ සැලසුම් කිරීම සහ ක්‍රමවේදය",
+        "source_sentence": "Research design and methodology in geographic studies",
+        "source_name": "Creswell, J.W. – Research Design (4th Ed.)",
+        "source_doc": "Creswell, J.W. – Research Design (4th Ed.)",
+        "source_url": "https://sagepub.com/creswell-research-design",
+        "source_language": "English",
+        "similarity_score": 0.871,
+        "is_plagiarized": true
+      }
+    ]
+  }
+}

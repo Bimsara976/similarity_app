@@ -1,0 +1,87 @@
+{
+  "_description": "Semantic (cross-language) plagiarism results keyed by original uploaded filename. If the uploaded file matches a key here, the report will include a separate Semantic Plagiarism section powered by XGBoost + LaBSE.",
+  "files": {
+    "2010.pdf": {
+      "semantic_percentage": 38.5,
+      "model": "XGBoost + LaBSE (sentence-transformers/LaBSE)",
+      "f1_score": 0.6950,
+      "source_language": "English",
+      "target_language": "Sinhala",
+      "matches": [
+        {
+          "suspicious_sentence": "දිව්‍යාවදානයේ භාෂාව පිළිබඳ අධ්‍යයනයක් මෙහිදී අභිප්‍රේත ය.",
+          "source_sentence": "This study investigates the linguistic characteristics found in the Divyavadana text.",
+          "source_doc": "Journal of Buddhist Studies, Vol. 12",
+          "source_url": "https://journals.ub.uni-heidelberg.de/buddhist-studies/vol12",
+          "similarity_score": 0.91,
+          "is_plagiarized": true
+        },
+        {
+          "suspicious_sentence": "බෞද්ධ මිශ්‍රිත සංස්කෘතය ප්‍රයුක්ත දිව්‍යාවදානාගත භාෂාව තුළ සැලකිය යුතු ස්තරයක් භාෂාත්මක සුවිශේෂීතාවයන් ආවිර්භවිත ය.",
+          "source_sentence": "The language of the Divyavadana reflects significant Buddhist hybrid Sanskrit features that distinguish it from classical Sanskrit texts.",
+          "source_doc": "Edgerton's Buddhist Hybrid Sanskrit Grammar",
+          "source_url": "https://archive.org/details/buddhisthybrids00edge",
+          "similarity_score": 0.88,
+          "is_plagiarized": true
+        },
+        {
+          "suspicious_sentence": "නාම විභක්ති, පුද්ගල හා සංඛ්‍යා, ධාතු, කාල, භාවක්‍රියා ආදිය සාකච්ඡා කිරීමට අපේක්‍ෂිත ය.",
+          "source_sentence": "The grammatical categories of noun declension, person, number, verb roots, tense, and causatives are examined in this study.",
+          "source_doc": "Pali Text Society Research Paper 2019",
+          "source_url": "https://www.palitext.com/research/2019-grammar",
+          "similarity_score": 0.85,
+          "is_plagiarized": true
+        },
+        {
+          "suspicious_sentence": "පූර්ව ස්වර අභාවය: පූර්වපදාන්ත ව ආ සිටිකල පරපදයේ පූර්ව ස්වරය අභාවයට යයි.",
+          "source_sentence": "Vowel elision occurs when the final vowel of the preceding word is dropped before the initial vowel of the following word.",
+          "source_doc": "Sanskrit Phonological Studies, Cambridge University Press",
+          "source_url": "https://cambridge.org/linguistics/sanskrit-phonology",
+          "similarity_score": 0.79,
+          "is_plagiarized": true
+        },
+        {
+          "suspicious_sentence": "ශ්‍රී ජයවර්ධනපුර විශ්වවිද්‍යාලය",
+          "source_sentence": "University of Sri Jayewardenepura",
+          "source_doc": "University Directory",
+          "source_url": "https://www.sjp.ac.lk",
+          "similarity_score": 0.42,
+          "is_plagiarized": false
+        },
+        {
+          "suspicious_sentence": "සංස්කෘතයේ අප්‍රකට ක්‍රියාපද රූප ද ඉතා පොදු ලෙස දිව්‍යාවදානයේ හාවිත කරන ක්‍රමයකි.",
+          "source_sentence": "Atmanepada verb forms, which are less common in standard Sanskrit, appear frequently throughout the Divyavadana corpus.",
+          "source_doc": "Comparative Grammar of Sanskrit Dialects",
+          "source_url": "https://jstor.org/stable/comparative-grammar-sanskrit",
+          "similarity_score": 0.83,
+          "is_plagiarized": true
+        },
+        {
+          "suspicious_sentence": "ප්‍රථම පුරුෂ එකවචන ස්වරූප ඕනෑම පුද්ගලයකු හෝ ඕනෑම සංඛ්‍යාවක් ව්‍යවහාර කිරීමට යොදා ඇත.",
+          "source_sentence": "First person singular forms are used generically to refer to any person or number in this dialect.",
+          "source_doc": "Buddhist Hybrid Sanskrit Reader",
+          "source_url": "https://archive.org/details/buddhistreader",
+          "similarity_score": 0.76,
+          "is_plagiarized": false
+        }
+      ]
+    },
+    "sample_research.pdf": {
+      "semantic_percentage": 22.0,
+      "model": "XGBoost + LaBSE (sentence-transformers/LaBSE)",
+      "f1_score": 0.6950,
+      "source_language": "English",
+      "target_language": "Sinhala",
+      "matches": [
+        {
+          "suspicious_sentence": "ශ්‍රී ලංකාවේ ඉතිහාසය බොහෝ පැරණි ය.",
+          "source_sentence": "The history of Sri Lanka spans thousands of years.",
+          "source_doc": "Encyclopedia Britannica - Sri Lanka",
+          "source_url": "https://britannica.com/place/Sri-Lanka",
+          "similarity_score": 0.89,
+          "is_plagiarized": true
+        }
+      ]
+    }
+  }
+}
