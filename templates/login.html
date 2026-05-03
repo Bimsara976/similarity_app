@@ -56,7 +56,6 @@
   <!-- Left panel: branding -->
   <div class="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 grid-bg relative overflow-hidden">
 
-    <!-- Blurred blobs -->
     <div class="absolute top-20 left-10 w-72 h-72 bg-indigo-600 rounded-full opacity-10 blur-3xl pointer-events-none"></div>
     <div class="absolute bottom-20 right-10 w-96 h-96 bg-violet-600 rounded-full opacity-10 blur-3xl pointer-events-none"></div>
 
@@ -86,7 +85,6 @@
               <p class="text-slate-400 text-xs mt-1">report_thesis_final.docx — <span class="text-amber-400 font-medium">34.5% plagiarism detected</span></p>
             </div>
           </div>
-          <!-- Mini progress -->
           <div class="mt-4 bg-slate-800 rounded-full h-2 overflow-hidden">
             <div class="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full" style="width:34.5%"></div>
           </div>
@@ -118,7 +116,7 @@
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
           </div>
-          Colour-coded source attribution in PDF report
+          Documents &amp; reports stored securely in MongoDB
         </div>
         <div class="flex items-center gap-3 text-slate-300 text-sm">
           <div class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
@@ -131,7 +129,6 @@
       </div>
     </div>
 
-    <!-- Footer credit -->
     <p class="text-slate-600 text-xs z-10">
       Similarity.lk — Sinhala Similarity &amp; Semantic Plagiarism Detection
     </p>
@@ -208,19 +205,10 @@
         </button>
       </form>
 
-      <div class="mt-8 glass rounded-xl p-4">
-        <p class="text-slate-500 text-xs font-medium mb-2 uppercase tracking-widest">Demo Credentials</p>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="bg-slate-800/60 rounded-lg px-3 py-2">
-            <p class="text-slate-500 text-xs">Username</p>
-            <p class="text-indigo-400 text-sm font-mono">admin</p>
-          </div>
-          <div class="bg-slate-800/60 rounded-lg px-3 py-2">
-            <p class="text-slate-500 text-xs">Password</p>
-            <p class="text-indigo-400 text-sm font-mono">admin123</p>
-          </div>
-        </div>
-      </div>
+      <p class="text-slate-500 text-sm text-center mt-6">
+        Don't have an account?
+        <a href="/register" class="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">Create one →</a>
+      </p>
 
       <p class="text-slate-700 text-xs text-center mt-8">
         © 2026 Similarity.lk · Sinhala Plagiarism Detection System
