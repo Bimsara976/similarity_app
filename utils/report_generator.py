@@ -1,12 +1,3 @@
-"""
-PDF Report Generator — WeasyPrint edition with Semantic Plagiarism section
-==========================================================================
-Backend priority:
-  1. WeasyPrint  (Linux/macOS — Cairo + Pango + HarfBuzz via GTK3)
-  2. Playwright  (cross-platform — headless Chromium, no OS deps)
-  3. ReportLab   (universal fallback)
-"""
-
 import os
 import html as html_mod
 from datetime import datetime
@@ -450,18 +441,7 @@ def _render_playwright(html_doc, report_path):
 # ── Public entry point ─────────────────────────────────────────────────────
 def generate_report(report_path, doc_name, timestamp, results,
                     plagiarism_percentage, semantic_data=None):
-    """
-    Generate a full plagiarism detection PDF report.
 
-    Parameters
-    ----------
-    report_path          : destination path for the PDF
-    doc_name             : original document base name
-    timestamp            : string like '20260101_120000'
-    results              : list of sentence result dicts from plagiarism_engine
-    plagiarism_percentage: float 0-100 (similarity score only)
-    semantic_data        : dict from semantic_loader.summarise_semantic() or None
-    """
     plag_pct = round(plagiarism_percentage, 1)
     verdict_label, verdict_color, _ = _verdict(plag_pct)
     total             = len(results)

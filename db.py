@@ -1,18 +1,3 @@
-"""
-db.py — MongoDB connection layer for Similarity.lk
-
-Reads connection settings from environment variables so the same
-code works both locally (localhost) and inside Docker Compose
-(where the host is the service name 'mongodb').
-
-Environment variables:
-  MONGO_HOST   default: localhost
-  MONGO_PORT   default: 27017
-  MONGO_USER   default: (none — no auth for local dev)
-  MONGO_PASS   default: (none)
-  MONGO_DB     default: similarity_lk
-"""
-
 import os
 import gridfs
 from pymongo import MongoClient, ASCENDING, DESCENDING

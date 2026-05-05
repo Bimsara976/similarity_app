@@ -1,18 +1,3 @@
-"""
-Similarity.lk — Sinhala Plagiarism Detection Web App  (v8 — MongoDB)
-Flask entry point: login, register, dashboard, upload, process, download.
-
-MongoDB collections:
-  - users   : { username, password_hash, role, full_name, email, created_at }
-  - files   : { id, original_name, saved_name, upload_time, status,
-                plagiarism_percentage, total_sentences, plagiarized_sentences,
-                report_name, uploaded_by, error, has_semantic,
-                upload_gridfs_id, report_gridfs_id }
-
-GridFS:
-  - uploads.*  : raw uploaded PDF/DOCX files
-  - reports.*  : generated plagiarism report PDFs
-"""
 import os
 import io
 import uuid

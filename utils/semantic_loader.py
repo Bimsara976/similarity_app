@@ -1,40 +1,3 @@
-"""
-Semantic Plagiarism Loader
-==========================
-Reads pre-computed cross-language plagiarism results from
-  data/semantic_plagiarism.json
-
-JSON schema (per document entry)
----------------------------------
-{
-  "filename.pdf": {
-    "percentage":          38.5,      ← overall semantic plagiarism %
-    "model":               "LaBSE + XGBoost",
-    "f1_score":            0.6950,
-    "source_language":     "English",
-    "target_language":     "Sinhala",
-    "total_pairs_checked": 40,
-    "flagged_pairs":       15,
-    "sources": [
-      { "name": "...", "url": "..." }
-    ],
-    "pairs": [
-      {
-        "suspicious_sentence": "සිංහල...",
-        "source_sentence":     "English...",
-        "source_doc":          "Journal Name",
-        "source_language":     "English",
-        "similarity_score":    0.912,
-        "is_plagiarized":      true
-      }
-    ]
-  }
-}
-
-Filename matching:
-  Uploaded "2010_20260307_111115.pdf"  →  matches key "2010.pdf"  ✓
-"""
-
 import os
 import json
 import re
@@ -44,7 +7,6 @@ _TIMESTAMP_RE  = re.compile(r'_\d{8}_\d{6}')
 
 
 def _normalise(filename: str) -> str:
-    """Strip timestamp and lowercase: '2010_20260307_111115.pdf' → '2010.pdf'"""
     name = os.path.basename(filename)
     name = _TIMESTAMP_RE.sub('', name)
     name = re.sub(r'_+\.', '.', name)
@@ -52,14 +14,6 @@ def _normalise(filename: str) -> str:
 
 
 def load_semantic_data(filename: str, data_folder: str) -> dict | None:
-    """
-    Return the semantic entry for the given filename, or None if not found.
-
-    Parameters
-    ----------
-    filename    : original uploaded filename (may include timestamp suffix)
-    data_folder : path to data/ directory
-    """
     json_path = os.path.join(data_folder, _SEMANTIC_FILE)
     if not os.path.exists(json_path):
         return None
@@ -87,15 +41,6 @@ def load_semantic_data(filename: str, data_folder: str) -> dict | None:
 
 
 def summarise_semantic(raw: dict) -> dict:
-    """
-    Validate and normalise a raw JSON entry into the dict expected by
-    report_generator._semantic_section().
-
-    Output keys
-    -----------
-    semantic_percentage, model, f1_score, source_language, target_language,
-    total_pairs, plagiarised_pairs, avg_similarity, sources, matches
-    """
     if not isinstance(raw, dict):
         return None
 

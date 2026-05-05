@@ -1,31 +1,3 @@
-"""
-Text Extractor — with OCR fallback for legacy-encoded Sinhala PDFs
-===================================================================
-
-Two types of problematic PDFs handled automatically:
-
-  Type A — CID-encoded fonts (no ToUnicode map):
-    pdfplumber returns "(cid:200)(cid:106)..." placeholders.
-    Detected by: > 25% of extracted text being CID tokens.
-
-  Type B — Wijesekara / legacy glyph-remapped fonts:
-    Font remaps Latin codepoints to Sinhala glyphs visually (FM-Malithi,
-    Helani, Iskoola-legacy, Nitro PDF output, etc.).
-    pdfplumber extracts garbled Latin bytes — zero Sinhala Unicode.
-    Detected by: < 2% Sinhala Unicode (U+0D80–U+0DFF) in extracted text.
-
-OCR fallback pipeline (no system dependencies required):
-    PyMuPDF (fitz) renders pages to images at 300 DPI — self-contained,
-    works on Windows/Linux/macOS without Poppler.
-    Tesseract OCR with sin+eng language pack produces Unicode Sinhala.
-
-Extraction priority:
-  PDF  → 1. pdfplumber  [quality check]
-          2. pypdf       [quality check]
-          3. PyMuPDF + Tesseract OCR  ← poppler-free, cross-platform
-  DOCX → python-docx
-"""
-
 import re
 import os
 import io

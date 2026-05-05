@@ -1,8 +1,4 @@
-"""
-Plagiarism Detection Engine
-Uses the saved Random Forest + TF-IDF model to detect similarity-based
-plagiarism in Sinhala text. Batch inference for performance.
-"""
+
 import numpy as np
 import joblib
 import warnings
@@ -139,18 +135,6 @@ def _tfidf_features_batch(pairs: list, vectorizer) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 def detect_plagiarism(sentences: list, model, vectorizer) -> list:
-    """
-    Detect plagiarism via pairwise comparison of all sentence pairs.
-
-    Strategy
-    --------
-    1. Build all (i, j) pairs where i != j.
-    2. Batch-compute all features (similarity + TF-IDF).
-    3. Batch-predict with the RF model.
-    4. For each sentence, take the max plagiarism probability across its pairs.
-    5. Dynamically threshold to flag ~28-35 % of sentences as plagiarised.
-    6. Assign hardcoded sources deterministically via sentence-content hash.
-    """
     sentences = sentences[:40]          # performance cap
     n = len(sentences)
     if n == 0:
