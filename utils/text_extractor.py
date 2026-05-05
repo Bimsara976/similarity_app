@@ -2,14 +2,14 @@ import re
 import os
 import io
 
-# Sinhala Unicode block: U+0D80 – U+0DFF
-_SINHALA_RE = re.compile(r'[\u0D80-\u0DFF]')
+# Sinhala Unicode block U+0D80–U+0DFF
+_SINHALA_RE  = re.compile(r'[\u0D80-\u0DFF]')
 CID_PATTERN  = re.compile(r'\(cid:\d+\)')
-
 _MIN_TEXT_LEN = 80
 
 
 def _cid_ratio(text: str) -> float:
+    """Fraction of text occupied by CID placeholder tokens."""
     if not text:
         return 0.0
     cid_chars = sum(len(m.group()) for m in CID_PATTERN.finditer(text))
@@ -27,19 +27,22 @@ def _sinhala_ratio(text: str) -> float:
 
 def _is_good_extraction(text: str) -> bool:
     """
-    Return True only if extraction looks like genuine Unicode content.
-    Rejects:
-      - Text too short (< 80 chars)
-      - > 25% CID placeholder tokens     → Type A legacy font
-      - < 2% Sinhala Unicode characters  → Type B Wijesekara font
+    True if extraction looks like genuine readable Unicode text.
+    Only rejects: too-short text or heavy CID encoding (legacy Type-A font).
+    NOTE: Language filtering is intentionally left to check_language() — this
+    function must NOT reject English text, otherwise English docs bypass the
+    language gate and surface as generic 500 errors instead of 422 warnings.
     """
     if not text or len(text.strip()) < _MIN_TEXT_LEN:
         return False
-    if _cid_ratio(text) > 0.25:
-        return False
-    if _sinhala_ratio(text) < 0.02:
+    if _cid_ratio(text) > 0.25:  # Type-A legacy CID font
         return False
     return True
+
+
+def _needs_ocr_for_wijesekara(text: str) -> bool:
+    """True if text looks like a Wijesekara/FM-font encoded doc (Type-B legacy)."""
+    return _sinhala_ratio(text) < 0.02 and len(text.strip()) >= _MIN_TEXT_LEN
 
 
 def _strip_cid(text: str) -> str:
@@ -47,32 +50,24 @@ def _strip_cid(text: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# OCR extractor — uses PyMuPDF (no Poppler needed, cross-platform)
+# OCR fallback — PyMuPDF render + Tesseract (no Poppler needed)
 # ---------------------------------------------------------------------------
 def _extract_via_ocr(file_path: str) -> str:
-    """
-    Render each PDF page to a 300-DPI RGB image using PyMuPDF (fitz),
-    then run Tesseract OCR with Sinhala + English language support.
-
-    PyMuPDF bundles its own MuPDF renderer — no Poppler or GTK required.
-    Works on Windows, Linux, and macOS out of the box.
-    """
-    import fitz          # PyMuPDF — pip install pymupdf
+    """Render PDF pages via PyMuPDF at 300 DPI, then OCR with Tesseract sin+eng."""
+    import fitz
     import pytesseract
     from PIL import Image
 
-    # Determine available OCR languages
     try:
-        langs = pytesseract.get_languages()
+        langs    = pytesseract.get_languages()
         ocr_lang = 'sin+eng' if 'sin' in langs else 'eng'
     except Exception:
         ocr_lang = 'sin+eng'
 
-    DPI    = 300
-    SCALE  = DPI / 72.0   # MuPDF native unit is 72 dpi
+    SCALE  = 300 / 72.0
     matrix = fitz.Matrix(SCALE, SCALE)
+    parts  = []
 
-    parts = []
     try:
         doc = fitz.open(file_path)
     except Exception as e:
@@ -80,14 +75,10 @@ def _extract_via_ocr(file_path: str) -> str:
 
     try:
         for page_num in range(len(doc)):
-            page = doc[page_num]
-            pix  = page.get_pixmap(matrix=matrix, colorspace=fitz.csRGB)
-            img  = Image.open(io.BytesIO(pix.tobytes('png')))
-            page_text = pytesseract.image_to_string(
-                img,
-                lang=ocr_lang,
-                config='--psm 3 --oem 1',
-            )
+            page      = doc[page_num]
+            pix       = page.get_pixmap(matrix=matrix, colorspace=fitz.csRGB)
+            img       = Image.open(io.BytesIO(pix.tobytes('png')))
+            page_text = pytesseract.image_to_string(img, lang=ocr_lang, config='--psm 3 --oem 1')
             parts.append(page_text)
     finally:
         doc.close()
@@ -96,45 +87,42 @@ def _extract_via_ocr(file_path: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# PDF extractor
+# PDF extractor — pdfplumber → pypdf → OCR
 # ---------------------------------------------------------------------------
 def _extract_pdf(file_path: str) -> str:
-    # --- Attempt 1: pdfplumber ---
+    # Attempt 1: pdfplumber
     try:
         import pdfplumber
-        pages_text = []
         with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                pages_text.append(page.extract_text() or '')
-        raw = '\n\n'.join(pages_text)
+            raw = '\n\n'.join(p.extract_text() or '' for p in pdf.pages)
         if _is_good_extraction(raw):
+            # Wijesekara font: text extracted but no Sinhala Unicode → OCR
+            if _needs_ocr_for_wijesekara(raw):
+                return _extract_via_ocr(file_path)
             return _strip_cid(raw)
     except Exception:
         pass
 
-    # --- Attempt 2: pypdf ---
+    # Attempt 2: pypdf
     try:
         from pypdf import PdfReader
-        pages_text = [p.extract_text() or '' for p in PdfReader(file_path).pages]
-        raw = '\n\n'.join(pages_text)
+        raw = '\n\n'.join(p.extract_text() or '' for p in PdfReader(file_path).pages)
         if _is_good_extraction(raw):
+            if _needs_ocr_for_wijesekara(raw):
+                return _extract_via_ocr(file_path)
             return _strip_cid(raw)
     except Exception:
         pass
 
-    # --- Attempt 3: PyMuPDF + Tesseract OCR ---
-    # Handles CID-encoded and Wijesekara/legacy fonts without Poppler
+    # Attempt 3: PyMuPDF + Tesseract OCR (handles CID and legacy fonts)
     try:
         return _extract_via_ocr(file_path)
     except Exception as e:
         raise RuntimeError(
             f'All extraction methods failed for "{os.path.basename(file_path)}". '
-            f'OCR error: {e}\n\n'
-            f'To enable OCR support, install:\n'
-            f'  pip install pymupdf pytesseract\n'
-            f'  # Windows: https://github.com/UB-Mannheim/tesseract/wiki\n'
-            f'  # Linux:   sudo apt install tesseract-ocr tesseract-ocr-sin\n'
-            f'  # macOS:   brew install tesseract'
+            f'OCR error: {e}\n'
+            f'Install: pip install pymupdf pytesseract\n'
+            f'Windows: https://github.com/UB-Mannheim/tesseract/wiki'
         )
 
 
@@ -151,13 +139,7 @@ def _extract_docx(file_path: str) -> str:
 # Public API
 # ---------------------------------------------------------------------------
 def extract_text(file_path: str) -> str:
-    """
-    Extract plain text from a PDF or DOCX file.
-
-    Automatically falls back to Tesseract OCR (via PyMuPDF page rendering)
-    for PDFs that use legacy Sinhala font encodings (CID or Wijesekara).
-    No Poppler installation required — PyMuPDF is self-contained.
-    """
+    """Extract plain text from PDF or DOCX; falls back to OCR for legacy Sinhala fonts."""
     ext = os.path.splitext(file_path)[1].lower()
     if ext == '.pdf':
         return _extract_pdf(file_path)
@@ -176,11 +158,7 @@ _MAX_SENTS  = 40
 
 
 def split_sentences(text: str) -> list:
-    """
-    Split text into sentences suitable for plagiarism analysis.
-    Splits on sentence-ending punctuation and blank lines.
-    Keeps sentences >= 15 chars, caps at 40 sentences.
-    """
+    """Split text on sentence-ending punctuation; keep ≥15 chars, cap at 40."""
     text = _WHITESPACE.sub(' ', text).strip()
     raw  = re.split(r'(?<=[.!?।෴])\s+|\n{2,}', text)
 
@@ -213,27 +191,12 @@ def split_sentences(text: str) -> list:
 # ---------------------------------------------------------------------------
 # Language detection
 # ---------------------------------------------------------------------------
-_SINHALA_BLOCK = re.compile(r'[\u0D80-\u0DFF]')
-
-# Minimum fraction of printable chars that must be Sinhala Unicode
-_MIN_SINHALA_RATIO = 0.02   # 2% — even short Sinhala titles pass this
+_SINHALA_BLOCK     = re.compile(r'[\u0D80-\u0DFF]')
+_MIN_SINHALA_RATIO = 0.02  # 2% floor — even short Sinhala titles pass
 
 
 def check_language(text: str) -> dict:
-    """
-    Analyse extracted text and decide whether it contains enough Sinhala
-    to be eligible for plagiarism detection.
-
-    Returns
-    -------
-    {
-        'is_sinhala'     : bool   — True if document is acceptable
-        'sinhala_ratio'  : float  — fraction of printable chars that are Sinhala
-        'sinhala_chars'  : int    — raw count of Sinhala Unicode characters
-        'total_chars'    : int    — total printable character count
-        'warning'        : str    — human-readable warning (empty if is_sinhala=True)
-    }
-    """
+    """Return is_sinhala=True only if ≥2% of printable chars are Sinhala Unicode."""
     printable = [c for c in text if not c.isspace()]
     total     = len(printable)
 
@@ -243,10 +206,7 @@ def check_language(text: str) -> dict:
             'sinhala_ratio': 0.0,
             'sinhala_chars': 0,
             'total_chars':   0,
-            'warning': (
-                'The document appears to be empty or contains no readable text. '
-                'Please upload a Sinhala-language document.'
-            ),
+            'warning': 'Document appears empty or contains no readable text. Please upload a Sinhala document.',
         }
 
     sinhala_count = len(_SINHALA_BLOCK.findall(text))
@@ -262,8 +222,7 @@ def check_language(text: str) -> dict:
             'warning': (
                 f'This document does not appear to contain Sinhala text '
                 f'(only {pct}% Sinhala characters detected). '
-                f'Similarity.lk is designed for Sinhala-language documents only. '
-                f'Please upload a document written in Sinhala (සිංහල).'
+                f'Similarity.lk only supports Sinhala (සිංහල) documents.'
             ),
         }
 

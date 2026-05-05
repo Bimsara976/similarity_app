@@ -1,0 +1,66 @@
+[
+    {
+        "id": 0,
+        "name": "Wikipedia – ශ්‍රී ලංකාවේ ඉතිහාසය",
+        "url": "https://si.wikipedia.org/wiki/ශ්‍රී_ලංකාව",
+        "color_hex": "#FFCDD2",
+        "color_rgb": [255, 205, 210],
+        "text_color": "#B71C1C"
+    },
+    {
+        "id": 1,
+        "name": "University of Colombo Repository",
+        "url": "https://repository.cmb.ac.lk/papers/sinhala-lit-001",
+        "color_hex": "#C8E6C9",
+        "color_rgb": [200, 230, 201],
+        "text_color": "#1B5E20"
+    },
+    {
+        "id": 2,
+        "name": "National Library of Sri Lanka",
+        "url": "https://natlib.lk/collections/sinhala/texts",
+        "color_hex": "#BBDEFB",
+        "color_rgb": [187, 222, 251],
+        "text_color": "#0D47A1"
+    },
+    {
+        "id": 3,
+        "name": "Lankadeepa Digital Archive",
+        "url": "https://lankadeepa.lk/archive/2024/sinhala",
+        "color_hex": "#FFF9C4",
+        "color_rgb": [255, 249, 196],
+        "text_color": "#F57F17"
+    },
+    {
+        "id": 4,
+        "name": "Buddhist Cultural Centre",
+        "url": "https://bcc.lk/texts/dharma/2024",
+        "color_hex": "#F3E5F5",
+        "color_rgb": [243, 229, 245],
+        "text_color": "#4A148C"
+    },
+    {
+        "id": 5,
+        "name": "Sri Lanka Broadcasting Corporation",
+        "url": "https://slbc.lk/sinhala/articles/101",
+        "color_hex": "#FFE0B2",
+        "color_rgb": [255, 224, 178],
+        "text_color": "#E65100"
+    },
+    {
+        "id": 6,
+        "name": "Open University of Sri Lanka",
+        "url": "https://ou.ac.lk/resources/sinhala/study-material",
+        "color_hex": "#E0F7FA",
+        "color_rgb": [224, 247, 250],
+        "text_color": "#006064"
+    },
+    {
+        "id": 7,
+        "name": "Sinhala Literary Journal Vol. 14",
+        "url": "https://sinhalaliterature.lk/journal/vol14/page45",
+        "color_hex": "#FCE4EC",
+        "color_rgb": [252, 228, 236],
+        "text_color": "#880E4F"
+    }
+]

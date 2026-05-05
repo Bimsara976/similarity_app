@@ -90,7 +90,7 @@ def admin_required(f):
 
 
 def _current_user():
-    """Return the full user document for the logged-in user."""
+    """Return full user doc for the logged-in session user."""
     if 'user' not in session:
         return None
     return get_db().users.find_one({'username': session['user']}, {'password_hash': 0})
@@ -128,7 +128,7 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    """Self-registration page. First user gets admin role automatically."""
+    """Self-registration; first user gets admin role automatically."""
     if 'user' in session:
         return redirect(url_for('dashboard'))
 
@@ -310,14 +310,7 @@ def upload_file():
 
 def _process_file(file_bytes: bytes, saved_name: str, base_name: str,
                   timestamp: str, original_name: str, file_id: str) -> dict:
-    """
-    Core processing:
-    1. Write bytes to a temp file (extractors need a path)
-    2. Extract text → language check → sentence split
-    3. Plagiarism detection
-    4. Semantic lookup
-    5. Generate PDF report → store in GridFS
-    """
+    """Extract → language check → detect → semantic lookup → PDF report → GridFS."""
     from utils.text_extractor    import extract_text, split_sentences, check_language
     from utils.plagiarism_engine import load_models, detect_plagiarism
     from utils.report_generator  import generate_report
@@ -341,7 +334,7 @@ def _process_file(file_bytes: bytes, saved_name: str, base_name: str,
             raise ValueError('No readable text found in the document.')
 
         model, vectorizer = load_models(MODELS_FOLDER)
-        results           = detect_plagiarism(sentences, model, vectorizer)
+        results           = detect_plagiarism(sentences, model, vectorizer, base_dir=BASE_DIR)
 
         total_s  = len(results)
         plag_s   = sum(1 for r in results if r['is_plagiarized'])
@@ -530,10 +523,7 @@ def admin_change_role(username):
 
 # ── Seed admin (first-run helper) ─────────────────────────────────────────
 def seed_admin_if_empty():
-    """
-    If no users exist yet, create a default admin account.
-    Remove or change credentials after first login.
-    """
+    """Create default admin on first run — change credentials after login."""
     db = get_db()
     if db.users.count_documents({}) == 0:
         db.users.insert_one({
