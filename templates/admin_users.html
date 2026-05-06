@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Management — Similarity.lk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    .sidebar-link { transition: all 0.18s; }
+    .sidebar-link:hover, .sidebar-link.active {
+      background: rgba(99,102,241,0.12);
+      color: #a5b4fc;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9));
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    .user-row { transition: background 0.15s; }
+    .user-row:hover { background: rgba(99,102,241,0.04); }
+
+    /* Role toggle pill */
+    .role-toggle {
+      position: relative;
+      display: inline-flex;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .role-toggle button {
+      position: relative;
+      padding: 3px 12px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      z-index: 1;
+    }
+    .role-toggle button.active-admin {
+      background: #4f46e5;
+      color: white;
+    }
+    .role-toggle button.active-researcher {
+      background: #0ea5e9;
+      color: white;
+    }
+    .role-toggle button.inactive {
+      background: transparent;
+      color: #64748b;
+    }
+    .role-toggle button.inactive:hover {
+      color: #94a3b8;
+    }
+
+    /* Confirm modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.open {
+      opacity: 1; pointer-events: all;
+    }
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      max-width: 420px; width: 90%;
+      padding: 28px;
+      transform: translateY(12px);
+      transition: transform 0.2s;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+    .modal-backdrop.open .modal-box {
+      transform: translateY(0);
+    }
+
+    /* Toast */
+    #toast {
+      transition: all 0.3s ease;
+      transform: translateX(120%);
+    }
+    #toast.show { transform: translateX(0); }
+
+    @keyframes slide-up {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .slide-up { animation: slide-up 0.3s ease forwards; }
+
+    .badge-admin      { background:#4f46e522; color:#a5b4fc; border:1px solid #4f46e544; }
+    .badge-researcher { background:#0ea5e922; color:#38bdf8; border:1px solid #0ea5e944; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside class="w-60 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0">
+    <!-- Logo -->
+    <div class="px-5 py-5 border-b border-slate-800">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-500 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-white font-bold text-sm leading-none">Similarity<span class="text-indigo-400">.lk</span></p>
+          <p class="text-slate-500 text-xs mt-0.5">Plagiarism Detection</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      <p class="text-slate-600 text-xs font-semibold px-3 mb-3 uppercase tracking-widest">Menu</p>
+      <a href="/dashboard" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 font-medium">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+        Dashboard
+      </a>
+      <a href="/admin/users" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-indigo-300 font-medium">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        User Management
+      </a>
+
+      <p class="text-slate-600 text-xs font-semibold px-3 mt-5 mb-3 uppercase tracking-widest">Info</p>
+      <div class="px-3 py-2 rounded-lg">
+        <p class="text-slate-500 text-xs font-medium">Model</p>
+        <p class="text-slate-300 text-xs mt-0.5">Random Forest</p>
+      </div>
+      <div class="px-3 py-2 rounded-lg">
+        <p class="text-slate-500 text-xs font-medium">F1-Score</p>
+        <p class="text-green-400 text-xs mt-0.5 font-semibold">0.9859</p>
+      </div>
+      <div class="px-3 py-2 rounded-lg">
+        <p class="text-slate-500 text-xs font-medium">Recall</p>
+        <p class="text-green-400 text-xs mt-0.5 font-semibold">1.0000 (Perfect)</p>
+      </div>
+    </nav>
+
+    <!-- Session user -->
+    <div class="px-3 py-4 border-t border-slate-800">
+      <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800/50">
+        <div class="w-8 h-8 rounded-full bg-indigo-500/30 flex items-center justify-center flex-shrink-0">
+          <span class="text-indigo-300 text-xs font-bold uppercase">{{ user[0] }}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-white text-xs font-semibold truncate">{{ user }}</p>
+          <p class="text-indigo-400 text-xs">Admin</p>
+        </div>
+        <a href="/logout" title="Sign out"
+           class="text-slate-600 hover:text-red-400 transition-colors ml-1">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main content ──────────────────────────────────────────────────────── -->
+  <main class="flex-1 flex flex-col min-h-screen overflow-auto">
+
+    <!-- Top bar -->
+    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
+      <div>
+        <h1 class="text-lg font-bold text-white">User Management</h1>
+        <p class="text-slate-500 text-xs mt-0.5">Manage researcher accounts and access roles</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 px-3 py-1.5 rounded-full text-xs font-medium">
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          Admin Access
+        </span>
+      </div>
+    </header>
+
+    <div class="flex-1 px-8 py-6 space-y-6">
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+
+        <div class="stat-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Total Users</p>
+            <div class="w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-white" id="stat-total">{{ users | length }}</p>
+          <p class="text-slate-500 text-xs mt-1">registered accounts</p>
+        </div>
+
+        <div class="stat-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Admins</p>
+            <div class="w-8 h-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
+              <svg class="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-white" id="stat-admins">
+            {{ users | selectattr('role','equalto','admin') | list | length }}
+          </p>
+          <p class="text-slate-500 text-xs mt-1">admin accounts</p>
+        </div>
+
+        <div class="stat-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Researchers</p>
+            <div class="w-8 h-8 rounded-lg bg-sky-500/15 flex items-center justify-center">
+              <svg class="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-white" id="stat-researchers">
+            {{ users | selectattr('role','equalto','researcher') | list | length }}
+          </p>
+          <p class="text-slate-500 text-xs mt-1">researcher accounts</p>
+        </div>
+
+        <div class="stat-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Current Session</p>
+            <div class="w-8 h-8 rounded-lg bg-green-500/15 flex items-center justify-center">
+              <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm font-bold text-white truncate">{{ user }}</p>
+          <p class="text-slate-500 text-xs mt-1">logged in as admin</p>
+        </div>
+
+      </div>
+
+      <!-- Search + Table -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden">
+
+        <!-- Table header -->
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-white text-sm font-semibold">Registered Accounts</p>
+              <p class="text-slate-500 text-xs">Change roles or remove accounts</p>
+            </div>
+          </div>
+
+          <!-- Search -->
+          <div class="relative w-64">
+            <svg class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input id="search-input" type="text" placeholder="Search users…"
+              oninput="filterUsers(this.value)"
+              class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg
+                     pl-9 pr-3 py-2 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"/>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-800">
+                <th class="text-left text-slate-500 text-xs font-semibold uppercase tracking-wider px-6 py-3">User</th>
+                <th class="text-left text-slate-500 text-xs font-semibold uppercase tracking-wider px-4 py-3">Email</th>
+                <th class="text-left text-slate-500 text-xs font-semibold uppercase tracking-wider px-4 py-3">Role</th>
+                <th class="text-left text-slate-500 text-xs font-semibold uppercase tracking-wider px-4 py-3">Joined</th>
+                <th class="text-left text-slate-500 text-xs font-semibold uppercase tracking-wider px-4 py-3">Last Login</th>
+                <th class="text-right text-slate-500 text-xs font-semibold uppercase tracking-wider px-6 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              {% for u in users %}
+              <tr class="user-row border-b border-slate-800/60 slide-up"
+                  id="row-{{ u.username }}"
+                  data-name="{{ u.username | lower }}"
+                  data-fullname="{{ (u.full_name or '') | lower }}"
+                  data-email="{{ (u.email or '') | lower }}"
+                  style="animation-delay: {{ loop.index0 * 40 }}ms">
+
+                <!-- User info -->
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
+                                {% if u.role == 'admin' %}bg-indigo-500/20{% else %}bg-sky-500/20{% endif %}">
+                      <span class="text-xs font-bold uppercase
+                                   {% if u.role == 'admin' %}text-indigo-300{% else %}text-sky-300{% endif %}">
+                        {{ u.username[0] }}
+                      </span>
+                    </div>
+                    <div>
+                      <p class="text-white font-semibold text-sm">{{ u.full_name or u.username }}</p>
+                      <p class="text-slate-500 text-xs">@{{ u.username }}</p>
+                    </div>
+                    {% if u.username == user %}
+                    <span class="text-xs bg-green-500/15 border border-green-500/30 text-green-400 px-2 py-0.5 rounded-full font-medium">You</span>
+                    {% endif %}
+                  </div>
+                </td>
+
+                <!-- Email -->
+                <td class="px-4 py-4">
+                  <span class="text-slate-400 text-xs">{{ u.email or '—' }}</span>
+                </td>
+
+                <!-- Role toggle -->
+                <td class="px-4 py-4">
+                  {% if u.username == user %}
+                    <!-- Cannot change own role -->
+                    <span class="badge-admin inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold">
+                      Admin
+                    </span>
+                  {% else %}
+                  <div class="role-toggle" id="toggle-{{ u.username }}">
+                    <button
+                      onclick="changeRole('{{ u.username }}', 'admin')"
+                      class="{% if u.role == 'admin' %}active-admin{% else %}inactive{% endif %}"
+                      id="btn-admin-{{ u.username }}">
+                      Admin
+                    </button>
+                    <button
+                      onclick="changeRole('{{ u.username }}', 'researcher')"
+                      class="{% if u.role == 'researcher' %}active-researcher{% else %}inactive{% endif %}"
+                      id="btn-researcher-{{ u.username }}">
+                      Researcher
+                    </button>
+                  </div>
+                  {% endif %}
+                </td>
+
+                <!-- Joined -->
+                <td class="px-4 py-4">
+                  <span class="text-slate-400 text-xs">
+                    {% if u.created_at %}
+                      {{ u.created_at.strftime('%d %b %Y') if u.created_at is not string
+                         else u.created_at[:10] }}
+                    {% else %}—{% endif %}
+                  </span>
+                </td>
+
+                <!-- Last login -->
+                <td class="px-4 py-4">
+                  <span class="text-slate-400 text-xs">
+                    {% if u.last_login %}
+                      {{ u.last_login.strftime('%d %b %Y, %H:%M') if u.last_login is not string
+                         else u.last_login[:16].replace('T',' ') }}
+                    {% else %}
+                      <span class="text-slate-600">Never</span>
+                    {% endif %}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="px-6 py-4 text-right">
+                  {% if u.username != user %}
+                  <button onclick="confirmDelete('{{ u.username }}', '{{ u.full_name or u.username }}')"
+                    class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500
+                           hover:text-red-400 hover:bg-red-500/10 border border-transparent
+                           hover:border-red-500/30 px-3 py-1.5 rounded-lg transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete
+                  </button>
+                  {% else %}
+                  <span class="text-slate-700 text-xs px-3 py-1.5">—</span>
+                  {% endif %}
+                </td>
+
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="px-6 py-16 text-center">
+                  <div class="flex flex-col items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center">
+                      <svg class="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                    </div>
+                    <p class="text-slate-500 text-sm">No users found</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty search state (hidden by default) -->
+        <div id="no-results" class="hidden px-6 py-12 text-center">
+          <p class="text-slate-500 text-sm">No users match your search.</p>
+        </div>
+
+      </div>
+    </div><!-- /content -->
+  </main>
+
+
+  <!-- ── Delete Confirm Modal ──────────────────────────────────────────────── -->
+  <div id="delete-modal" class="modal-backdrop" onclick="closeModal(event)">
+    <div class="modal-box">
+      <div class="flex items-start gap-4 mb-5">
+        <div class="w-11 h-11 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-white font-bold text-base">Delete Account</h3>
+          <p class="text-slate-400 text-sm mt-1">This action cannot be undone.</p>
+        </div>
+      </div>
+
+      <p class="text-slate-300 text-sm mb-6">
+        You are about to permanently delete the account
+        <strong id="modal-username-label" class="text-white"></strong>.
+        All associated data will be removed.
+      </p>
+
+      <div class="flex gap-3">
+        <button onclick="document.getElementById('delete-modal').classList.remove('open')"
+          class="flex-1 px-4 py-2.5 rounded-xl border border-slate-700 text-slate-400
+                 hover:text-slate-200 hover:border-slate-600 text-sm font-medium transition-colors">
+          Cancel
+        </button>
+        <button id="confirm-delete-btn"
+          class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500
+                 text-white text-sm font-semibold transition-colors">
+          Delete Account
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── Toast ────────────────────────────────────────────────────────────── -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50">
+    <div id="toast-inner" class="rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3 text-sm font-medium">
+      <span id="toast-icon"></span>
+      <span id="toast-msg"></span>
+    </div>
+  </div>
+
+
+  <script>
+    // ── Toast ─────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'success') {
+      const toast  = document.getElementById('toast');
+      const inner  = document.getElementById('toast-inner');
+      const msgEl  = document.getElementById('toast-msg');
+      const iconEl = document.getElementById('toast-icon');
+      msgEl.textContent = msg;
+      const styles = {
+        success: { bg: 'bg-green-900/90 border border-green-700/50 text-green-200', icon: '✓' },
+        error:   { bg: 'bg-red-900/90 border border-red-700/50 text-red-200',       icon: '✕' },
+        info:    { bg: 'bg-indigo-900/90 border border-indigo-700/50 text-indigo-200', icon: 'ℹ' },
+        warning: { bg: 'bg-amber-900/90 border border-amber-600/50 text-amber-200', icon: '⚠' },
+      };
+      const s = styles[type] || styles.info;
+      inner.className = `rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3 text-sm font-medium ${s.bg}`;
+      iconEl.textContent = s.icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    // ── Search / filter ───────────────────────────────────────────────────
+    function filterUsers(query) {
+      const q    = query.toLowerCase().trim();
+      const rows = document.querySelectorAll('#users-tbody tr[id^="row-"]');
+      let visible = 0;
+      rows.forEach(row => {
+        const name     = row.dataset.name     || '';
+        const fullname = row.dataset.fullname || '';
+        const email    = row.dataset.email    || '';
+        const match    = !q || name.includes(q) || fullname.includes(q) || email.includes(q);
+        row.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      document.getElementById('no-results').classList.toggle('hidden', visible > 0);
+    }
+
+    // ── Role change ───────────────────────────────────────────────────────
+    function changeRole(username, newRole) {
+      const btnAdmin      = document.getElementById(`btn-admin-${username}`);
+      const btnResearcher = document.getElementById(`btn-researcher-${username}`);
+
+      // Optimistic UI update
+      btnAdmin.className      = newRole === 'admin'      ? 'active-admin'      : 'inactive';
+      btnResearcher.className = newRole === 'researcher' ? 'active-researcher' : 'inactive';
+
+      fetch(`/admin/users/role/${username}`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ role: newRole }),
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          showToast(`${username} is now a${newRole === 'admin' ? 'n' : ''} ${newRole}.`, 'success');
+          updateStats();
+        } else {
+          // Revert on failure
+          const prevRole = newRole === 'admin' ? 'researcher' : 'admin';
+          btnAdmin.className      = prevRole === 'admin'      ? 'active-admin'      : 'inactive';
+          btnResearcher.className = prevRole === 'researcher' ? 'active-researcher' : 'inactive';
+          showToast(data.error || 'Role update failed.', 'error');
+        }
+      })
+      .catch(() => showToast('Network error.', 'error'));
+    }
+
+    // ── Delete modal ──────────────────────────────────────────────────────
+    let _pendingDelete = null;
+
+    function confirmDelete(username, displayName) {
+      _pendingDelete = username;
+      document.getElementById('modal-username-label').textContent = displayName;
+      document.getElementById('delete-modal').classList.add('open');
+    }
+
+    function closeModal(e) {
+      if (e.target === document.getElementById('delete-modal')) {
+        document.getElementById('delete-modal').classList.remove('open');
+      }
+    }
+
+    document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+      if (!_pendingDelete) return;
+      const username = _pendingDelete;
+      _pendingDelete = null;
+      document.getElementById('delete-modal').classList.remove('open');
+
+      fetch(`/admin/users/delete/${username}`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            const row = document.getElementById(`row-${username}`);
+            if (row) {
+              row.style.opacity    = '0';
+              row.style.transition = 'opacity 0.3s';
+              setTimeout(() => { row.remove(); updateStats(); }, 300);
+            }
+            showToast(`Account "${username}" deleted.`, 'info');
+          } else {
+            showToast(data.error || 'Delete failed.', 'error');
+          }
+        })
+        .catch(() => showToast('Network error.', 'error'));
+    });
+
+    // ── Recount stats after actions ───────────────────────────────────────
+    function updateStats() {
+      const rows      = document.querySelectorAll('#users-tbody tr[id^="row-"]');
+      let total = 0, admins = 0, researchers = 0;
+      rows.forEach(row => {
+        if (row.style.display === 'none' && !row.id) return; // skip hidden search rows
+        total++;
+        const adminBtn = row.querySelector('[id^="btn-admin-"]');
+        if (adminBtn) {
+          if (adminBtn.classList.contains('active-admin')) admins++;
+          else researchers++;
+        } else {
+          // "You" row — always admin
+          admins++;
+        }
+      });
+      document.getElementById('stat-total').textContent       = total;
+      document.getElementById('stat-admins').textContent      = admins;
+      document.getElementById('stat-researchers').textContent = researchers;
+    }
+  </script>
+</body>
+</html>
